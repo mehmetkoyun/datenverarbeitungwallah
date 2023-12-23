@@ -5,6 +5,8 @@
 #include <sstream>
 #include <cmath>
 #include <ctime>
+#include <chrono>
+
 using namespace std;
 
 const int rows = 10;
@@ -71,13 +73,15 @@ double acceptanceProbability(int currentScore, int newScore, double temperature)
 //implementiert den Simulated Annealing Algorithmus
 
 void algorithm(vector<vector<int>>& matrix, vector<vector<int>>& compatibilityMatrix) {
-	double temperature = 1e6;
-	double minTemperature = 1e-6;
+	double temperature = 1e8;
+	double minTemperature = 1e-8;
 	double coolingRate = 1e-6;
 
 	int currentScore = totalCompatibility(matrix, compatibilityMatrix);
 	srand(time(0));
-
+	
+	auto start = chrono::high_resolution_clock::now();
+	
 	while(temperature > minTemperature) {
 		int randomRow1 = rand() % 10;
 		int randomRow2 = rand() % 10;
@@ -101,9 +105,16 @@ void algorithm(vector<vector<int>>& matrix, vector<vector<int>>& compatibilityMa
 		} else {
 			swap(matrix[randomRow1][randomCol1], matrix[randomRow2][randomCol2]);
 		}
+
+		auto current = chrono::high_resolution_clock::now();
+		if (current - start >= chrono::seconds(10)) {
+			cout << "Time limit exceeded" << endl;
+			break;
+		}
 		
 		temperature *= 1 - coolingRate;
 	}
+	cout << "Elapsed time: " << chrono::duration_cast<chrono::milliseconds>(chrono::high_resolution_clock::now() - start).count() << "ms" << endl;
 }
 
 int main() {
@@ -112,12 +123,12 @@ int main() {
 
 	readMatrix(cin, matrix);
 
-	cout << "#Seating chart of size 10 by 10 with R = " << totalCompatibility(matrix, compatibilityMatrix) << endl;
+	cout << "#Starting seating chart of size 10 by 10 with R = " << totalCompatibility(matrix, compatibilityMatrix) << endl;
 	int sum = totalCompatibility(matrix, compatibilityMatrix); // Pass compatibilityMatrix as a reference
 	algorithm(matrix, compatibilityMatrix);
 
 	int optimizedSum = totalCompatibility(matrix, compatibilityMatrix);
-	cout << "#Seating chart of size 10 by 10 with R = " << optimizedSum << endl;
+	cout << "#Optimized eeating chart of size 10 by 10 with R = " << optimizedSum << endl;
 
 	for (const auto& row : matrix) {
         for (int seat : row) {
