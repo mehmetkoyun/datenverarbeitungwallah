@@ -1,0 +1,37 @@
+In diesem Programm wird das optimale Sitzschema für eine Hochzeit mit 100 Gästen und einer Sesselordnung von 10x10 berechnet.
+Es gibt drei verschiedene Persönlichkeitstypen, welche sich untereinander unterschiedlich gut verstehen, dies ist in einer Kompatibilitätsmatrix vermerkt.
+(Welchen Optimierungsalgorithmus soll ich verwenden?)(Zeile 1 bis 3 als Frage an ChatGPT 4)
+
+Beim Start des Projekts wurde der Ablauf in fünf Phasen unterteilt:
+	- Einlesen der Anfangssitzordnung
+	- Berechnung der Kompatibilität der Gäste
+	- Optimierung der Sitzordnung
+	- Ausgabe der optimierten Sitzordnung
+	- Optimieren des Algorithmus
+
+Zu Beginn des Programms wird die Anfangssitzordnung mittels der "void readMatrix" in einen 2D-Vektor gespeichert. Die Größe dieser Matrix wurde global festgelegt.
+Danach wird initial die Kompatibilität der Gäste am Anfang berechnet und ausgegeben.
+Hierzu wird die Funktion "int totalCompatibility" aufgerufen. Besonderheit: jeweils der letzten Zeile und Spalte fehlen nach untern oder nach rechts ein Sitznachbar, wodurch diese getrennt gerechnet wurden. (siehe //letzte Zeile und letze Spalte)
+(Wie schaut so ein simulated annealing algorithmus in c++ aus?) (ChatGPT 4) https://bookdown.org/max/FES/simulated-annealing.html
+
+Anschließend wird der Algorithmus aufgerufen, welcher die Sitzordnung optimiert. In diesem Fall wurde Simulated Annealing verwendet, da es am einfachsten zu implementieren ist und lokale Extrema vermeidet. 
+
+Simulated Annealing:
+	1. Wähle zwei zufällige Gäste aus und vertausche diese.
+	2. Überprüfe, ob die Kompatibilität der Gäste sich verbessert hat.
+	3. Wenn ja, berechne die Wahrscheinlichkeit, mit der die Änderung akzeptiert wird. (Wahrscheinlichkeit ist abhängig von der Temperatur, welches mit der Zeit abkühlt)
+	4. Wenn die Änderung akzeptiert wird, speichere die Änderung und senke die Temperatur.
+	5. Wiederhole Schritt 1 bis 4, bis die Mindesttemperatur erreicht hat.
+
+Für die Zufallszahlen wurde die Funktion rand() aus der Standardbibliothek verwendet. Als Seed wurde die aktuelle Zeit verwendet, damit die Zufallszahlen bei jedem Durchlauf anders sind.
+Um den Laufzeit zu verringern, wurde die Änderung der Kompatibilität mittels der Funktion "localCompatibility" berechnet. Diese Funktion berechnet nur die Kompatibilität der betroffenen Gäste.
+Die Wahrscheinlichkeit, mit der die Änderung akzeptiert wird, wurde mit der Funktion "acceptanceProbability" berechnet. Ist der neue Wert größer als der alte, gibt er den Wert 1 zurück, ansonsten wird die Wahrscheinlichkeit mit der Formel "exp((new-old)/temperature)" berechnet.
+Mit der Zeit sinkt die Temperatur und somit steigt die Wahrscheinlichkeit, dass ein schlechterer Wert abgelehnt wird. 
+Sobald die Mindesttemperatur erreicht wird, wird die Sitzordnung ausgegeben und das Programm beendet.
+
+Debug/Schwierigkeiten:
+	- Setzt man die Temperatur zu hoch oder die Mindesttemperatur und Kühlrate zu niedrig, läuft das Programm elendig lange und es kommt kein optimierter Wert raus. Durch Fine-Tuning der Werte konnte man das Problem lösen. Dies sollte für alle beliebigen 10x10 Matrizen Gültigkeit haben.
+	- Während dem Optimierungsprozess kam es zu sehr langen Laufzeiten (t>30s). Durch "localCompatibility" konnte man die Laufzeit deutlich reduzieren. 
+	- Mit der Flag "-O3" wurde die Laufzeit nochmals deutlich reduziert.
+	- Das Programm lieferte fast immer maximal fünf weniger als das Optimum. (Optimum abgeschätzt durch Maximum nach fünf durchläufen)
+	- Damit ein einziger Durchlauf ausreichend ist, wurde versucht die Bestmatrix abzuspeichern und mit einer niedrigeren Temperatur am Ende des Programms dort fortzusetzen. Das Verändern der Temperatur hat meist ein schlechteres Ergebnis produziert. (adaptive simulated annealing) Als Lösung: den Algorithmus zwei Mal laufen lassen. (verschiedener seed)
